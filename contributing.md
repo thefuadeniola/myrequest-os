@@ -23,6 +23,13 @@ We welcome contributions from everyone. Please follow these simple steps:
 
 ---
 
+## 🚀 Priority
+
+Expand the database and frontend to support more than just song requests.  
+The app currently focuses on song submissions, but the existing room creation and protection logic can be extended for broader use — such as enabling employees or users to submit general text-based requests or feedback to service providers.
+
+---
+
 ## Need Help?
 If you get stuck or have questions, feel free to ask in the issue discussion.  
 We’re happy to help you get started!
