@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server",
-    "dev": "node --watch --env-file=.env server"
+    "dev": "node --watch --env-file=.env server",
+    "dev:ci": "node --watch server"
   },
   "keywords": [],
   "author": "",
