@@ -1,0 +1,65 @@
+name: myrequest-os
+on: [push,pull_request]
+jobs:
+  CI_HEALTH_CHECK: 
+    runs-on: ubuntu-latest
+    services:
+        mongo:
+          image: mongo:6 # Specify the desired MongoDB version
+          ports:
+            - 27017:27017 # Expose the default MongoDB port
+          options: >-
+            --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+            --health-interval=10s
+            --health-timeout=5s
+            --health-retries=5
+
+    env:
+      DATABASE_URL:  mongodb://mongo:27017/testdb
+      # Frontend
+      NEXT_PUBLIC_SPOTIFY_CLIENT_ID: your_spotify_client_id
+      NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET: your_spotify_client_secret
+      NEXT_PUBLIC_BACKEND_API_URL: http://localhost:8000
+      
+      # Backend
+      
+      PORT: 8000
+      MONGO_URI: mongodb://mongo:27017/testdb
+      JWT_SECRET: your_jwt_secret
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: .
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+  
+      - name: Frontend Checks
+        run: |
+          cd frontend
+          npm install
+          npm run build
+      - name: Backend Checks
+        run: |
+          cd backend
+          npm install
+          npm run dev:ci > server.log 2>&1 &
+          server_pid=$!
+          echo "Server started with PID: $server_pid"
+          
+          for i in {1..15}; do
+            if curl -fs http://localhost:8000 > /dev/null; then
+              echo "Server is up!"
+              kill $server_pid
+              echo "No issues found!"
+              exit 0
+            fi
+            echo "Waiting for server... (attempt $i/15)"
+            sleep 2
+          done
+          
+          echo "Server failed to start. Printing logs:"
+          cat server.log
+          kill $server_pid
