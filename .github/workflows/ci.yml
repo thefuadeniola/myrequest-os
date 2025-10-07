@@ -63,3 +63,4 @@ jobs:
           echo "Server failed to start. Printing logs:"
           cat server.log
           kill $server_pid
+          exit 1
