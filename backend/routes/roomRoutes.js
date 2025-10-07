@@ -34,7 +34,7 @@ router.post('/enter', async(req, res, next) => {
             res.cookie("room_token", roomToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "none",
+                sameSite: "lax",
                 path: "/"
             });
 
