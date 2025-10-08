@@ -93,14 +93,12 @@ const Navbar = () => {
             {popup && (
                 <CreateRoom showPopup={showPopup}/>
             )}
-            
             {loginModal && (
                 <Login 
                     setLoginModal={setLoginModal} 
                     setRegisterModal={setRegisterModal} 
                 />
             )}
-
             {registerModal && (
                 <Register 
                     setRegisterModal={setRegisterModal} 

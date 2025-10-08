@@ -25,7 +25,6 @@ const Register = ({ setRegisterModal, setLoginModal }) => {
                 { username, password },
                 { withCredentials: true }
             )
-            
             if (data) {
                 console.log(data)
                 window.location.reload()
