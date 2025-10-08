@@ -120,4 +120,4 @@ const Login = ({ setLoginModal, setRegisterModal }) => {
     )
 }
 
-export default Login
+export default Login;
