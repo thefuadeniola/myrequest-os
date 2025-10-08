@@ -9,24 +9,33 @@ const EnterRoom = ({ showPopup, roomName, roomId }) => {
 
     const router = useRouter();
 
+  const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+  const API = rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080'
+
   const handleRoomEnter = async() => {
     if(!pin) {
         setError("Enter a pin for this room!")
     }
     try {
         setError("")
-        const { data } = await axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/room/enter`,
-            { id: roomId, pin },
-            { withCredentials: true }
-        );
+    const { data } = await axios.post(
+      `${API}/api/room/enter`,
+      { id: roomId, pin },
+      { withCredentials: true }
+    );
         if(data) router.push(`/room/${data._id}`)
     } catch (error) {
-        if (error.response && error.response.status === 401) {
-            setError("Invalid room pin!")
-        } else {
-            setError(error.response?.data?.message || "Something went wrong, try again!")
-        }
+    // Better error messages for debugging in the browser
+    console.error('Enter room error:', error);
+    if (error.response) {
+      if (error.response.status === 401) {
+        setError('Invalid room pin!')
+      } else {
+        setError(error.response.data?.message || `Error ${error.response.status}`)
+      }
+    } else {
+      setError(error.message || 'Something went wrong, try again!')
+    }
     }
   }
 

@@ -15,11 +15,13 @@ const RoomGuard = ({ roomId }) => {
     }
     try {
         setError("")
-        const { data } = await axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/room/enter`,
-            { id: roomId, pin },
-            { withCredentials: true }
-        );
+    const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+    const API = rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080'
+    const { data } = await axios.post(
+      `${API}/api/room/enter`,
+      { id: roomId, pin },
+      { withCredentials: true }
+    );
         if(data) router.push(`/room/${data._id}`)
         window.location.reload()
     } catch (error) {
