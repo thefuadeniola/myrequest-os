@@ -12,7 +12,7 @@ connectToDB();
 const app = express();
 
 app.use(cors({
-    origin: ["http://localhost:3000", "https://myrequest-psi.vercel.app"],    
+    origin: true,    
     credentials: true
 }))
 
