@@ -18,10 +18,9 @@ const Navbar = () => {
     useEffect(()=> {
       const checkAuth = async() => {
         try {
-          const { data } = await axios.get(
-            `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/user/me`,
-            { withCredentials: true }
-          );
+          const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+          const API = rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080'
+          const { data } = await axios.get(`${API}/api/user/me`, { withCredentials: true });
 
           setUser(data);
         } catch (error) {
@@ -34,7 +33,9 @@ const Navbar = () => {
 
     const handleLogout = async() => {
       try {
-        const { data } = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/user/logout`, {}, {withCredentials: true});
+        const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+        const API = rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080'
+        const { data } = await axios.post(`${API}/api/user/logout`, {}, {withCredentials: true});
         if(data) window.location.reload()
       } catch (error) {
         console.log("Unable to logout.")

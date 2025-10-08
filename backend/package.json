@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server",
-    "dev": "node --watch --env-file=.env server",
-    "dev:ci": "node --watch server"
+    "dev": "node --watch -r dotenv/config server",
+    "dev:ci": "node --watch -r dotenv/config server"
   },
   "keywords": [],
   "author": "",
@@ -17,9 +17,13 @@
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.20.0",
     "mongoose": "^8.18.2"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^8.10.1"
   }
 }
