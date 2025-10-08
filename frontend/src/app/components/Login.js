@@ -1,28 +1,28 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import axios from 'axios'
 import spinner from '@/app/assets/icons8-spinner.gif'
 
-const Register = ({ setRegisterModal, setLoginModal }) => {
+const Login = ({ setLoginModal, setRegisterModal }) => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
-    const handleRegister = async () => {
+    const handleLogin = async() => {
         setError('')
         setLoading(true)
 
         if (!username || !password) {
-            setError("Please enter a username and password.");
+            setError("Please enter both username and password.");
             setLoading(false)
             return
         }
 
         try {
             const { data } = await axios.post(
-                `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/user/register`,
-                { username, password },
+                `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/user/login`, 
+                { username, password }, 
                 { withCredentials: true }
             )
             
@@ -32,30 +32,30 @@ const Register = ({ setRegisterModal, setLoginModal }) => {
             }
         } catch (err) {
             setError(
-                err.response?.data?.message || "Registration failed. This username might be taken."
+                err.response?.data?.message || "Login failed. Please check your credentials and try again."
             );
             setLoading(false);
         }
     }
 
-    const switchToLogin = (e) => {
+    const switchToRegister = (e) => {
         e.preventDefault()
         setError('')
-        setRegisterModal(false) 
-        setLoginModal(true)   
+        setLoginModal(false)   
+        setRegisterModal(true) 
     }
 
     return (
         <div 
             className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center font-sans" 
-            onClick={() => setRegisterModal(false)}
+            onClick={() => setLoginModal(false)}
         >
             <div 
                 className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6 transition-all transform duration-300 ease-out" 
                 onClick={(e) => e.stopPropagation()}
             >
                 <h2 className='text-2xl font-bold text-gray-800 mb-6 text-center'>
-                    Create Your Account
+                    Welcome Back
                 </h2>
 
                 <div className='mb-4'>
@@ -66,7 +66,7 @@ const Register = ({ setRegisterModal, setLoginModal }) => {
                         type="text" 
                         value={username} 
                         onChange={(e) => setUsername(e.target.value)} 
-                        placeholder="Choose a username"
+                        placeholder="Enter your username"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a4161a] transition duration-150" 
                     />
                 </div>
@@ -96,23 +96,23 @@ const Register = ({ setRegisterModal, setLoginModal }) => {
                         ? 'bg-gray-200 text-gray-700 cursor-not-allowed' 
                         : 'bg-[#a4161a] hover:bg-[#8e1417] text-white shadow-md'
                     }`}
-                    onClick={handleRegister}
+                    onClick={handleLogin}
                     disabled={loading}
                 >
                     {loading ? (
                         <Image src={spinner} alt='Loading' height={24} width={24} unoptimized /> 
                     ) : (
-                        <span>Register</span>
+                        <span>Login</span>
                     )}
                 </button>
 
                 <p className="mt-4 text-center text-sm text-gray-600">
-                    Already have an account? 
+                    Don&apos;t have an account? 
                     <button 
                         className='text-[#a4161a] hover:text-[#8e1417] font-semibold ml-1 focus:outline-none'
-                        onClick={switchToLogin}
+                        onClick={switchToRegister}
                     >
-                        Login
+                        Register
                     </button>
                 </p>
             </div>
@@ -120,4 +120,4 @@ const Register = ({ setRegisterModal, setLoginModal }) => {
     )
 }
 
-export default Register
+export default Login

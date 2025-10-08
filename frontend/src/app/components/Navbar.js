@@ -5,81 +5,129 @@ import CreateRoom from './CreateRoom'
 import add from '@/app/assets/plus.png'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
+import Login from './Login'
 import Register from './Register'
 import axios from 'axios'
 
 const Navbar = () => {
     const [popup, showPopup] = useState(false)
     const [loginModal, setLoginModal] = useState(false)
+    const [registerModal, setRegisterModal] = useState(false)  
     const showCPopUp = () => showPopup(!popup)
-    const showLoginModal = () => setLoginModal(!loginModal)
+
+    const openLoginModal = () => {
+        setRegisterModal(false);
+        setLoginModal(true);
+    }
+
+    const openRegisterModal = () => {
+        setLoginModal(false);
+        setRegisterModal(true);
+    }
+    
     const [user, setUser] = useState(null);
     
+    const getApiUrl = () => {
+        const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+        return (rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080');
+    }
+
     useEffect(()=> {
-      const checkAuth = async() => {
-        try {
-          const { data } = await axios.get(
-            `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/user/me`,
-            { withCredentials: true }
-          );
-
-          setUser(data);
-        } catch (error) {
-          setUser(null)
+        const checkAuth = async() => {
+            try {
+                const API = getApiUrl();
+                const { data } = await axios.get(`${API}/api/user/me`, { withCredentials: true });
+                setUser(data);
+            } catch (error) {
+                setUser(null)
+            }
         }
-      }
-
-      checkAuth();
+        checkAuth();
     }, [])
 
     const handleLogout = async() => {
-      try {
-        const { data } = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/user/logout`, {}, {withCredentials: true});
-        if(data) window.location.reload()
-      } catch (error) {
-        console.log("Unable to logout.")
-      }
+        try {
+            const API = getApiUrl();
+            const { data } = await axios.post(`${API}/api/user/logout`, {}, {withCredentials: true});
+            if(data) window.location.reload()
+        } catch (error) {
+            console.log("Unable to logout.")
+        }
     }
 
     return (
-      <div className='px-4 py-5'>
-        <div className='border-[#b1a7a6] border-b pb-4 pl-2 flex flex-row items-center justify-between relative'>
-            <div className='flex flex-row items-center space-x-2'>
-              <Link href='/' className='font-bold font-inter text-lg md:text-2xl text-[#a4161a]'>Myrequest.com</Link>
+        <div className='px-4 py-5 font-sans'>
+            <div className='border-gray-300 border-b pb-4 pl-2 flex items-center justify-between relative'>
+                <div className='flex items-center space-x-2'>
+                    <Link href='/' className='font-extrabold text-xl md:text-3xl text-[#a4161a] hover:text-[#8e1417] transition duration-200'>
+                        Myrequest.com
+                    </Link>
+                </div>
+
+                {user ? (
+                    <button 
+                        onClick={showCPopUp} 
+                        className='bg-[#a4161a] hover:bg-[#8e1417] text-white font-semibold px-4 py-2 rounded-full flex items-center space-x-2 shadow-md transition duration-200'
+                    >
+                        <span>Create room</span>
+                        <Image src={add} height={16} width={16} alt='Add' className='filter invert' />
+                    </button>
+                ) : (
+                    <div className='flex items-center space-x-3'>
+                        <button 
+                            onClick={openLoginModal} 
+                            className='border border-[#a4161a] text-[#a4161a] hover:bg-[#a4161a] hover:text-white font-semibold px-4 py-1.5 rounded-lg transition duration-200'
+                        >
+                            Login
+                        </button>
+                        <button 
+                            onClick={openRegisterModal} 
+                            className='bg-[#a4161a] hover:bg-[#8e1417] text-white font-semibold px-4 py-1.5 rounded-lg shadow-md transition duration-200'
+                        >
+                            Register
+                        </button>
+                    </div>
+                )}
             </div>
+            
+            {popup && (
+                <CreateRoom showPopup={showPopup}/>
+            )}
+            
+            {loginModal && (
+                <Login 
+                    setLoginModal={setLoginModal} 
+                    setRegisterModal={setRegisterModal} 
+                />
+            )}
 
-            {
-              user ? (
+            {registerModal && (
+                <Register 
+                    setRegisterModal={setRegisterModal} 
+                    setLoginModal={setLoginModal} 
+                />
+            )}
 
-                <button onClick={showCPopUp} className='bg-[#a4161a] w-fit px-3 py-1 rounded-2xl flex flex-row items-center space-x-2 text-white font-inter cursor-pointer'>
-                  <span>Create room</span>
-                  <Image src={add} height={16} width={16} alt='' />
-                </button>
-
-              ) : (
-
-                <button onClick={showLoginModal} className='underline w-fit px-3 py-1 flex items-center space-x-2 font-inter'>
-                  <span className='text-[#a4161a]'>login</span>
-                </button>
-
-              )
-            }
+            <footer className='fixed bottom-0 left-0 right-0 w-full z-40 bg-white border-t border-gray-200 p-4'>
+                <div className='flex items-center justify-center text-sm text-gray-600'>
+                    {user ? (
+                        <>
+                            <span className='font-medium text-gray-700'>
+                                {`Logged in as ${user?.username}`}
+                            </span>
+                            <button 
+                                onClick={handleLogout} 
+                                className='ml-2 underline text-[#a4161a] hover:text-[#8e1417] font-semibold'
+                            >
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        'Not logged in. Log in to create a room.'
+                    )}
+                </div>
+            </footer>
         </div>
-        {
-          popup && (
-            <CreateRoom showPopup={showPopup}/>
-          )
-        }
-        {
-          loginModal && (
-            <Register setLoginModal={setLoginModal} />
-          )
-        }
-
-        <footer className='fixed bottom-0 left-0 right-0 w-full z-100 bg-white mt-6 flex items-center justify-center border-t border-1 border-[#d3d3d3] p-4'>
-          <p className='text-sm'>{user ?<><span>{`Logged in as ${user?.username}`}</span> <button onClick={handleLogout} className='ml-1 underline text-[#a4161a] bg-white'>Logout</button></> : 'Not logged in. Log in to create a room.'}</p>
-        </footer>
-      </div>
     )
 }
 
