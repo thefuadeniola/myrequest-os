@@ -1,0 +1,40 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Install, Lint and Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+      - name: Run lint
+        run: |
+          cd frontend
+          npm run lint
+      - name: Run build
+        run: |
+          cd frontend
+          npm run build
+
+  deploy-vercel:
+    name: Deploy to Vercel (conditional)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - run: echo "Deploy moved to .github/workflows/deploy-frontend.yml (manual trigger)"
+
+

@@ -24,7 +24,8 @@ const protectRoom = async (req, res, next) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const secret = process.env.JWT_SECRET || 'dev_jwt_secret_change_in_production';
+  const decoded = jwt.verify(token, secret);
 
     // Attach room to request
     req.room = await Room.findById(decoded.roomId);

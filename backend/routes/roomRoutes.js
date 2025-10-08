@@ -23,29 +23,50 @@ router.post('/create', protect, async(req, res, next) => {
 
 router.post('/enter', async(req, res, next) => {
     const { id, pin } = req.body;
+    if (process.env.NODE_ENV !== 'production') {
+        console.log('ENTER TRACE: body id=', id, 'pin=', pin);
+    }
     const room = await Room.findById(id).populate("admin", "username")
-    if(!room) console.log("Found a matching room!")
+    if (!room) {
+        return res.status(404).json({ message: 'Room not found' });
+    }
 
     try {
-        if(await room.matchPin(pin)) {
+        // Dev debug: log types and check matchPin method
+        if (process.env.NODE_ENV !== 'production') {
+            try {
+                const fs = await import('fs');
+                const debugLine = `ENTER DEBUG: received pin: ${pin} (type=${typeof pin}) | room._id: ${room._id} | room.pin hash len: ${room.pin ? room.pin.length : 0} | matchPinType: ${typeof room.matchPin}\n`;
+                fs.appendFileSync('backend/enter-debug.log', debugLine);
+            } catch (e) {}
+        }
 
-            const roomToken = generateToken({roomId: room._id});
+        const isMatch = await room.matchPin(pin);
+        if (isMatch) {
+            const roomToken = generateToken({ roomId: room._id });
 
-            res.cookie("room_token", roomToken, {
+            res.cookie('room_token', roomToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-                path: "/"
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/'
             });
 
-            res.status(200).json({
+            return res.status(200).json({
                 _id: room.id,
                 name: room.name,
                 adminUsername: room.admin.username,
-            })
-        } else res.status(401).json({ message: "Invalid room pin!" })
+            });
+        } else {
+            return res.status(401).json({ message: 'Invalid room pin!' });
+        }
     } catch (error) {
-        res.status(500).json({ message: `Unable to enter room` })
+        try {
+            const fs = await import('fs');
+            const s = (error && error.stack) ? error.stack : String(error);
+            fs.appendFileSync('backend/enter-debug.log', `ENTER ERROR: ${s}\n`);
+        } catch (e) {}
+        return res.status(500).json({ message: 'Unable to enter room' });
     }
 })
 
@@ -54,6 +75,40 @@ router.get('/all', async (req, res, next) => {
         const rooms = await Room.find({});
         res.status(200).json(rooms);
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Dev-only: seed a demo admin and room for local development
+router.post('/seed-demo', async (req, res) => {
+    try {
+        if (process.env.NODE_ENV === 'production') {
+            return res.status(403).json({ message: 'Seeding disabled in production' });
+        }
+
+        // Create or reuse an admin
+        let admin = await Admin.findOne({ username: 'demo' });
+        if (!admin) {
+            admin = await Admin.create({ username: 'demo', password: 'demo123' });
+        }
+
+        // Create demo room if none exists
+        let room = await Room.findOne({ name: 'Demo Room' });
+        if (!room) {
+            room = await Room.create({
+                name: 'Demo Room',
+                image: 'https://via.placeholder.com/400x200.png?text=Demo+Room',
+                pin: '1234',
+                admin: admin._id,
+                requests: [
+                    { song_title: 'Demo Song', artistes: [{ id: '1', name: 'Demo Artist' }] }
+                ]
+            });
+        }
+
+        res.status(201).json({ room });
+    } catch (error) {
+        console.error('Seed error', error);
         res.status(500).json({ message: error.message });
     }
 });

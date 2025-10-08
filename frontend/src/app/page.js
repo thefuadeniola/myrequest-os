@@ -11,7 +11,9 @@ export default function Home() {
   useEffect(()=>{
     const fetchRooms = async () => {
       try {
-        const { data } = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/room/all`)
+        const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+        const API = rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080'
+        const { data } = await axios.get(`${API}/api/room/all`)
         if(data) setAllRooms(data)
       } catch (error) {
         console.log("Error fetching rooms:", error)
@@ -19,6 +21,28 @@ export default function Home() {
     }
 
     fetchRooms();
+  }, [])
+
+  // Auto-seed demo data in development if no rooms were found
+  useEffect(() => {
+    const seedIfEmpty = async () => {
+      try {
+        if (process.env.NODE_ENV !== 'production') {
+          const base = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8080'
+          const { data } = await axios.get(`${base}/api/room/all`)
+          if (Array.isArray(data) && data.length === 0) {
+            await axios.post(`${base}/api/room/seed-demo`)
+            const { data: refreshed } = await axios.get(`${base}/api/room/all`)
+            if (refreshed) setAllRooms(refreshed)
+          }
+        }
+      } catch (e) {
+        // ignore seed errors
+        console.log('Seed error (ignored):', e.message)
+      }
+    }
+
+    seedIfEmpty()
   }, [])
 
   return (
