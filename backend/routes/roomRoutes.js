@@ -7,7 +7,7 @@ import Admin from '../models/admin.js';
 
 const router = express.Router();
 
-router.post('/create', protect, async(req, res, next) => {
+router.post('/create', protect, async (req, res, next) => {
     try {
         const { name, pin, image } = req.body;
 
@@ -21,7 +21,7 @@ router.post('/create', protect, async(req, res, next) => {
     }
 })
 
-router.post('/enter', async(req, res, next) => {
+router.post('/enter', async (req, res, next) => {
     const { id, pin } = req.body;
     if (process.env.NODE_ENV !== 'production') {
         console.log('ENTER TRACE: body id=', id, 'pin=', pin);
@@ -38,7 +38,7 @@ router.post('/enter', async(req, res, next) => {
                 const fs = await import('fs');
                 const debugLine = `ENTER DEBUG: received pin: ${pin} (type=${typeof pin}) | room._id: ${room._id} | room.pin hash len: ${room.pin ? room.pin.length : 0} | matchPinType: ${typeof room.matchPin}\n`;
                 fs.appendFileSync('backend/enter-debug.log', debugLine);
-            } catch (e) {}
+            } catch (e) { }
         }
 
         const isMatch = await room.matchPin(pin);
@@ -65,7 +65,7 @@ router.post('/enter', async(req, res, next) => {
             const fs = await import('fs');
             const s = (error && error.stack) ? error.stack : String(error);
             fs.appendFileSync('backend/enter-debug.log', `ENTER ERROR: ${s}\n`);
-        } catch (e) {}
+        } catch (e) { }
         return res.status(500).json({ message: 'Unable to enter room' });
     }
 })
@@ -86,10 +86,13 @@ router.post('/seed-demo', async (req, res) => {
             return res.status(403).json({ message: 'Seeding disabled in production' });
         }
 
+        const demoUsername = process.env.DEMO_ADMIN_USERNAME || 'demo';
+        const demoPassword = process.env.DEMO_ADMIN_PASSWORD || 'demo123';
+
         // Create or reuse an admin
-        let admin = await Admin.findOne({ username: 'demo' });
+        let admin = await Admin.findOne({ username: demoUsername });
         if (!admin) {
-            admin = await Admin.create({ username: 'demo', password: 'demo123' });
+            admin = await Admin.create({ username: demoUsername, password: demoPassword });
         }
 
         // Create demo room if none exists
@@ -114,26 +117,26 @@ router.post('/seed-demo', async (req, res) => {
 });
 
 router.get("/:roomId", protectRoom, async (req, res) => {
-  try {
-    const { roomId } = req.params;
+    try {
+        const { roomId } = req.params;
 
-    const room = await Room.findById(roomId).select("-pin").populate("admin", "username");
-    if (!room) {
-      return res.status(404).json({ message: "Room not found" });
+        const room = await Room.findById(roomId).select("-pin").populate("admin", "username");
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+
+        res.json(room);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-
-    res.json(room);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 });
 
-router.post('/add-request', protectRoom, async(req, res, next) => {
+router.post('/add-request', protectRoom, async (req, res, next) => {
     try {
         const { title, artistes } = req.body;
         const room = await Room.findById(req.room._id);
 
-        if(!room) {
+        if (!room) {
             return res.status(404).json({ message: "Room not found" })
         }
 
@@ -151,7 +154,7 @@ router.post('/add-request', protectRoom, async(req, res, next) => {
             artistes: artistes
         })
 
-        await room.save();       
+        await room.save();
         res.status(201).json(room)
     } catch (error) {
         res.status(500).json({ message: error.message })
