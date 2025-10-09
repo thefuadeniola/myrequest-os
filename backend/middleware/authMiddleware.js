@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
-import Admin from "../models/admin.js"; // adjust path as needed
+import User from "../models/user.js"; 
 
 const protect = async (req, res, next) => {
   let token;
 
   try {
-    if (req.headers.authorization &&req.headers.authorization.startsWith("Bearer")) {
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
 
@@ -16,11 +16,12 @@ const protect = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({ message: "Not authorized, no token" });
     }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.admin = await Admin.findById(decoded.adminId).select("-password");
+    req.user = await User.findById(decoded.userId).select("-password");
 
-    if (!req.admin) {
+    if (!req.user) {
       return res.status(401).json({ message: "Not authorized, user not found" });
     }
 
