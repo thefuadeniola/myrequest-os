@@ -7,26 +7,27 @@ import User from '../models/user.js';
 
 const router = express.Router();
 
-router.post('/create', protect, async (req, res, next) => {
+router.post('/create', protect, async (req, res) => {
     try {
         const { name, pin, image } = req.body;
 
         const room = await Room.create({
-            name, pin, image, admin: req.user._id
+            name,
+            pin,
+            image,
+            admin: req.user._id
         });
 
-        res.status(201).json(room)
+        res.status(201).json(room);
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ message: error.message });
     }
-})
+});
 
-router.post('/enter', async (req, res, next) => {
+router.post('/enter', async (req, res) => {
     const { id, pin } = req.body;
-    const room = await Room.findById(id).populate("admin", "username")
-    if (!room) {
-        return res.status(404).json({ message: 'Room not found' });
-    }
+    const room = await Room.findById(id).populate("admin", "username");
+    if (!room) return res.status(404).json({ message: 'Room not found' });
 
     try {
         const isMatch = await room.matchPin(pin);
@@ -43,7 +44,7 @@ router.post('/enter', async (req, res, next) => {
             return res.status(200).json({
                 _id: room.id,
                 name: room.name,
-                adminUsername: room.admin.username,
+                adminUsername: room.admin.username
             });
         } else {
             return res.status(401).json({ message: 'Invalid room pin!' });
@@ -51,16 +52,16 @@ router.post('/enter', async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({ message: 'Unable to enter room' });
     }
-})
+});
 
-router.get('/all', async (req, res, next) => {
+router.get('/all', async (req, res) => {
     try {
         const rooms = await Room.find({});
         res.status(200).json(rooms);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-})
+});
 
 router.post('/seed-demo', async (req, res) => {
     try {
@@ -93,51 +94,72 @@ router.post('/seed-demo', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-})
+});
 
 router.get("/:roomId", protectRoom, async (req, res) => {
     try {
         const { roomId } = req.params;
-
         const room = await Room.findById(roomId).select("-pin").populate("admin", "username");
-        if (!room) {
-            return res.status(404).json({ message: "Room not found" });
-        }
+        if (!room) return res.status(404).json({ message: "Room not found" });
+
+        room.requests.sort((a, b) => b.upvotes - a.upvotes);
 
         res.json(room);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-})
+});
 
-router.post('/add-request', protectRoom, async (req, res, next) => {
+router.post('/add-request', protectRoom, async (req, res) => {
     try {
         const { title, artistes } = req.body;
         const room = await Room.findById(req.room._id);
-
-        if (!room) {
-            return res.status(404).json({ message: "Room not found" })
-        }
+        if (!room) return res.status(404).json({ message: "Room not found" });
 
         const duplicate = room.requests.some(req =>
             req.song_title.toLowerCase() === title.toLowerCase() &&
             JSON.stringify(req.artistes.map(a => a.id).sort()) === JSON.stringify(artistes.map(a => a.id).sort())
         );
 
-        if (duplicate) {
-            return res.status(409).json({ message: "duplicate!" });
+        if (duplicate) return res.status(409).json({ message: "duplicate!" });
+
+        room.requests.push({ song_title: title, artistes });
+        await room.save();
+
+        res.status(201).json(room);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Upvote / Toggle Upvote
+router.post('/:roomId/request/:requestId/upvote', protect, async (req, res) => {
+    try {
+        const { roomId, requestId } = req.params;
+        const userId = req.user._id;
+
+        const room = await Room.findById(roomId);
+        if (!room) return res.status(404).json({ message: 'Room not found' });
+
+        const request = room.requests.id(requestId);
+        if (!request) return res.status(404).json({ message: 'Request not found' });
+
+        if (request.upvotedBy.includes(userId)) {
+            request.upvotes -= 1;
+            request.upvotedBy.pull(userId);
+        } else {
+            request.upvotes += 1;
+            request.upvotedBy.push(userId);
         }
 
-        room.requests.push({
-            song_title: title,
-            artistes: artistes
-        })
-
         await room.save();
-        res.status(201).json(room)
+
+        room.requests.sort((a, b) => b.upvotes - a.upvotes);
+
+        res.status(200).json(room);
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        res.status(500).json({ message: error.message });
     }
-})
+});
 
 export default router;
