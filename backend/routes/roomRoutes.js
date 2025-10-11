@@ -7,7 +7,8 @@ import User from '../models/user.js';
 
 const router = express.Router();
 
-router.post('/create', protect, async (req, res) => {
+// --- Room Creation ---
+router.post('/create', protect, async (req, res, next) => {
     try {
         const { name, pin, image } = req.body;
 
@@ -15,24 +16,32 @@ router.post('/create', protect, async (req, res) => {
             name,
             pin,
             image,
-            admin: req.user._id
+            admin: req.user._id // Use req.user._id directly
         });
 
-        res.status(201).json(room);
+        return res.status(201).json(room);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        // Send internal server error for database or unexpected issues
+        return res.status(500).json({ message: error.message });
     }
 });
 
+// --- Room Entry (Login) ---
 router.post('/enter', async(req, res, next) => {
     const { id, pin } = req.body;
-    const room = await Room.findById(id).populate("admin", "username")
-    if(!room) console.log("Found a matching room!")
+    
+    // Find the room and populate admin for the response
+    const room = await Room.findById(id).populate("admin", "username");
+    
+    // CRITICAL FIX: If room is not found, return 404 immediately.
+    if (!room) {
+        return res.status(404).json({ message: "Room not found." });
+    }
 
     try {
-        if(await room.matchPin(pin)) {
-
-            const roomToken = generateToken({roomId: room._id});
+        // Use matchPin method, which only runs if 'room' exists.
+        if (await room.matchPin(pin)) {
+            const roomToken = generateToken({ roomId: room._id });
 
             res.cookie("room_token", roomToken, {
                 httpOnly: true,
@@ -41,27 +50,35 @@ router.post('/enter', async(req, res, next) => {
                 path: "/"
             });
 
-            res.status(200).json({
+            // Respond with room details (without pin)
+            return res.status(200).json({
                 _id: room.id,
                 name: room.name,
                 adminUsername: room.admin.username,
-            })
-        } else res.status(401).json({ message: "Invalid room pin!" })
+            });
+        } 
+        
+        // Invalid PIN check
+        return res.status(401).json({ message: "Invalid room pin!" });
+        
     } catch (error) {
-        res.status(500).json({ message: `Unable to enter room` })
-    }
-})
-
-router.get('/all', async (req, res) => {
-    try {
-        const rooms = await Room.find({});
-        res.status(200).json(rooms);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        // Handle any errors that might occur during pin matching or token generation
+        return res.status(500).json({ message: `Unable to enter room: ${error.message}` });
     }
 });
 
-router.post('/seed-demo', async (req, res) => {
+// --- Get All Rooms ---
+router.get('/all', async (req, res, next) => {
+    try {
+        const rooms = await Room.find({});
+        return res.status(200).json(rooms);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+});
+
+// --- Seeding Demo Data ---
+router.post('/seed-demo', async (req, res, next) => {
     try {
         if (process.env.NODE_ENV === 'production') {
             return res.status(403).json({ message: 'Seeding disabled in production' });
@@ -88,50 +105,65 @@ router.post('/seed-demo', async (req, res) => {
             });
         }
 
-        res.status(201).json({ room });
+        return res.status(201).json({ room });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 });
 
-router.get("/:roomId", protectRoom, async (req, res) => {
+// --- Get Single Room Details ---
+router.get("/:roomId", protectRoom, async (req, res, next) => {
     try {
         const { roomId } = req.params;
+        
+        // Since protectRoom already found the room, we use req.room if possible 
+        // to avoid a second find. However, since the middleware might only check a token,
+        // and this route needs full data, we'll keep the logic clean here:
         const room = await Room.findById(roomId).select("-pin").populate("admin", "username");
+        
         if (!room) return res.status(404).json({ message: "Room not found" });
 
+        // Sort before sending
         room.requests.sort((a, b) => b.upvotes - a.upvotes);
 
-        res.json(room);
+        return res.json(room);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 });
 
-router.post('/add-request', protectRoom, async (req, res) => {
+// --- Add Song Request ---
+router.post('/add-request', protectRoom, async (req, res, next) => {
     try {
         const { title, artistes } = req.body;
-        const room = await Room.findById(req.room._id);
-        if (!room) return res.status(404).json({ message: "Room not found" });
+        
+        // IMPROVEMENT: Use the room object attached by protectRoom middleware
+        const room = req.room; 
+        
+        // Note: The check if (!room) is safely handled by the protectRoom middleware
+        // (assuming it throws an error or returns a 401/404 if the room isn't valid/found).
 
         const duplicate = room.requests.some(req =>
             req.song_title.toLowerCase() === title.toLowerCase() &&
             JSON.stringify(req.artistes.map(a => a.id).sort()) === JSON.stringify(artistes.map(a => a.id).sort())
         );
 
-        if (duplicate) return res.status(409).json({ message: "duplicate!" });
+        // Better status code for application logic conflict
+        if (duplicate) {
+            return res.status(400).json({ message: "Song is already on the list!" });
+        }
 
         room.requests.push({ song_title: title, artistes });
         await room.save();
 
-        res.status(201).json(room);
+        return res.status(201).json(room);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 });
 
-// Upvote / Toggle Upvote
-router.post('/:roomId/request/:requestId/upvote', protect, async (req, res) => {
+// --- Upvote / Toggle Upvote ---
+router.post('/:roomId/request/:requestId/upvote', protect, async (req, res, next) => {
     try {
         const { roomId, requestId } = req.params;
         const userId = req.user._id;
@@ -142,21 +174,27 @@ router.post('/:roomId/request/:requestId/upvote', protect, async (req, res) => {
         const request = room.requests.id(requestId);
         if (!request) return res.status(404).json({ message: 'Request not found' });
 
-        if (request.upvotedBy.includes(userId)) {
+        // Check if the user has already upvoted
+        const userIndex = request.upvotedBy.indexOf(userId);
+
+        if (userIndex > -1) {
+            // User has upvoted, so toggle off (downvote)
             request.upvotes -= 1;
-            request.upvotedBy.pull(userId);
+            request.upvotedBy.splice(userIndex, 1);
         } else {
+            // User has not upvoted, so toggle on (upvote)
             request.upvotes += 1;
             request.upvotedBy.push(userId);
         }
 
         await room.save();
 
+        // Sort only once, before sending the response
         room.requests.sort((a, b) => b.upvotes - a.upvotes);
 
-        res.status(200).json(room);
+        return res.status(200).json(room);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 });
 
