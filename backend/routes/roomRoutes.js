@@ -21,54 +21,34 @@ router.post('/create', protect, async (req, res, next) => {
     }
 })
 
-router.post('/enter', async (req, res, next) => {
+router.post('/enter', async(req, res, next) => {
     const { id, pin } = req.body;
-    if (process.env.NODE_ENV !== 'production') {
-        console.log('ENTER TRACE: body id=', id, 'pin=', pin);
-    }
     const room = await Room.findById(id).populate("admin", "username")
-    if (!room) {
-        return res.status(404).json({ message: 'Room not found' });
-    }
+    if(!room) console.log("Found a matching room!")
 
     try {
-        // Dev debug: log types and check matchPin method
-        if (process.env.NODE_ENV !== 'production') {
-            try {
-                const fs = await import('fs');
-                const debugLine = `ENTER DEBUG: received pin: ${pin} (type=${typeof pin}) | room._id: ${room._id} | room.pin hash len: ${room.pin ? room.pin.length : 0} | matchPinType: ${typeof room.matchPin}\n`;
-                fs.appendFileSync('backend/enter-debug.log', debugLine);
-            } catch (e) { }
-        }
+        if(await room.matchPin(pin)) {
 
-        const isMatch = await room.matchPin(pin);
-        if (isMatch) {
-            const roomToken = generateToken({ roomId: room._id });
+            const roomToken = generateToken({roomId: room._id});
 
-            res.cookie('room_token', roomToken, {
+            res.cookie("room_token", roomToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
-                path: '/'
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                path: "/"
             });
 
-            return res.status(200).json({
+            res.status(200).json({
                 _id: room.id,
                 name: room.name,
                 adminUsername: room.admin.username,
-            });
-        } else {
-            return res.status(401).json({ message: 'Invalid room pin!' });
-        }
+            })
+        } else res.status(401).json({ message: "Invalid room pin!" })
     } catch (error) {
-        try {
-            const fs = await import('fs');
-            const s = (error && error.stack) ? error.stack : String(error);
-            fs.appendFileSync('backend/enter-debug.log', `ENTER ERROR: ${s}\n`);
-        } catch (e) { }
-        return res.status(500).json({ message: 'Unable to enter room' });
+        res.status(500).json({ message: `Unable to enter room` })
     }
 })
+
 
 router.get('/all', async (req, res, next) => {
     try {
