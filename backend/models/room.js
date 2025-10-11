@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose"
-import bcrypt from 'bcrypt'
+import mongoose, { Schema } from "mongoose";
+import bcrypt from 'bcrypt';
 
 const requestSchema = new Schema({
     song_title: {
@@ -8,8 +8,16 @@ const requestSchema = new Schema({
     },
     artistes: {
         type: Array
-    }
-})
+    },
+    upvotes: {
+        type: Number,
+        default: 0
+    },
+    upvotedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User" 
+    }]
+});
 
 const roomSchema = new Schema({
     name: {
@@ -27,7 +35,7 @@ const roomSchema = new Schema({
     },
     admin: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Admin",
+        ref: "User", 
         required: true
     },
     requests: [requestSchema],
@@ -35,16 +43,16 @@ const roomSchema = new Schema({
         type: Date,
         default: Date.now
     }
-})
+});
 
 roomSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.pin = await bcrypt.hash(this.pin, salt);
   next();
-})
+});
 
 roomSchema.methods.matchPin = async function(enteredPin) {
-    return await bcrypt.compare(enteredPin, this.pin)
+    return await bcrypt.compare(enteredPin, this.pin);
 }
 
 const Room = mongoose.model("Room", roomSchema);
