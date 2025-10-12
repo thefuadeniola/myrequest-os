@@ -7,12 +7,15 @@ import cors from 'cors'
 import { auth } from "express-openid-connect";
 
 const port = process.env.PORT || 8080
+const isProduction = process.env.NODE_ENV === 'production';
 
 const config = {
   authRequired: false,
   auth0Logout: true,
   secret: process.env.JWT_SECRET,
-  baseURL: 'http://localhost:8000' || 'https://myrequest-os.onrender.com',
+  baseURL: isProduction 
+    ? 'https://myrequest-os.onrender.com' 
+    : 'http://localhost:8000',
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
 };
