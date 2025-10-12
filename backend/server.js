@@ -14,7 +14,7 @@ const config = {
   secret: process.env.JWT_SECRET,
   baseURL: `http://localhost:8000`,
   clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: 'https://dev-gugk0vaqqsbhpf27.us.auth0.com',
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
 };
 
 const app = express();
