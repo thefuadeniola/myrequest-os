@@ -5,10 +5,8 @@ import roomRoutes from './routes/roomRoutes.js'
 import cookieParser from "cookie-parser";
 import cors from 'cors'
 import { auth } from "express-openid-connect";
-import session from 'express-session';
 
 const port = process.env.PORT || 8080
-const production_url = process.env.PRODUCTION_URL
 
 const config = {
   authRequired: false,
