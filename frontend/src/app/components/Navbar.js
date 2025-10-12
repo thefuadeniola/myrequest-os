@@ -15,21 +15,15 @@ const Navbar = () => {
     const [registerModal, setRegisterModal] = useState(false)
     const showCPopUp = () => showPopup(!popup)
 
-    const openLoginModal = () => {
-        setRegisterModal(false);
-        setLoginModal(true);
-    }
-
-    const openRegisterModal = () => {
-        setLoginModal(false);
-        setRegisterModal(true);
-    }
-    
     const [user, setUser] = useState(null);
     
     const getApiUrl = () => {
         const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
         return (rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080');
+    }
+
+    const handleLogin = () => {
+        window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/login`;
     }
 
     useEffect(()=> {
@@ -73,18 +67,12 @@ const Navbar = () => {
                         <Image src={add} height={16} width={16} alt='Add' className='filter invert' />
                     </button>
                 ) : (
-                    <div className='flex items-center space-x-3'>
+                    <div className='flex items-center'>
                         <button 
-                            onClick={openLoginModal} 
+                            onClick={handleLogin} 
                             className='border border-[#a4161a] text-[#a4161a] hover:bg-[#a4161a] hover:text-white font-semibold px-4 py-1.5 rounded-lg transition duration-200'
                         >
                             Login
-                        </button>
-                        <button 
-                            onClick={openRegisterModal} 
-                            className='bg-[#a4161a] hover:bg-[#8e1417] text-white font-semibold px-4 py-1.5 rounded-lg shadow-md transition duration-200'
-                        >
-                            Register
                         </button>
                     </div>
                 )}

@@ -3,7 +3,16 @@ import User from '../models/user.js';
 import generateToken from '../utils/generateToken.js';
 import protect from '../middleware/authMiddleware.js';
 
+import pkg from 'express-openid-connect';
+
+const { requiresAuth } = pkg;
+
 const router = express.Router();
+
+
+router.get('/profile', requiresAuth(), (req, res) => {
+  res.send(JSON.stringify(req.oidc.user))
+});
 
 router.post('/register', async (req, res, next) => {
     try {
