@@ -29,15 +29,6 @@ app.use(cors({
 
 connectToDB();
 
-app.use(
-  session({
-    secret: process.env.JWT_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }, // set true if HTTPS
-  })
-);
-
 app.use(auth(config));
 
 
