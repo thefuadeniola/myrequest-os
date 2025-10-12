@@ -9,8 +9,6 @@ import axios from 'axios'
 
 const Navbar = () => {
     const [popup, showPopup] = useState(false)
-    const [loginModal, setLoginModal] = useState(false)
-    const [registerModal, setRegisterModal] = useState(false)
     const showCPopUp = () => showPopup(!popup)
 
     const [user, setUser] = useState(null);
@@ -75,19 +73,6 @@ const Navbar = () => {
             {popup && (
                 <CreateRoom showPopup={showPopup}/>
             )}
-            {loginModal && (
-                <Login 
-                    setLoginModal={setLoginModal} 
-                    setRegisterModal={setRegisterModal} 
-                />
-            )}
-            {registerModal && (
-                <Register 
-                    setRegisterModal={setRegisterModal} 
-                    setLoginModal={setLoginModal} 
-                />
-            )}
-
             <footer className='fixed bottom-0 left-0 right-0 w-full z-40 bg-white border-t border-gray-200 p-4'>
                 <div className='flex items-center justify-center text-sm text-gray-600'>
                     {user ? (
