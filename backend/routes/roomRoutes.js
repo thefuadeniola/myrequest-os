@@ -33,7 +33,6 @@ router.post('/enter', async(req, res, next) => {
     // Find the room and populate admin for the response
     const room = await Room.findById(id).populate("admin", "username");
     
-    // CRITICAL FIX: If room is not found, return 404 immediately.
     if (!room) {
         return res.status(404).json({ message: "Room not found." });
     }
@@ -50,7 +49,6 @@ router.post('/enter', async(req, res, next) => {
                 path: "/"
             });
 
-            // Respond with room details (without pin)
             return res.status(200).json({
                 _id: room.id,
                 name: room.name,
@@ -58,7 +56,6 @@ router.post('/enter', async(req, res, next) => {
             });
         } 
         
-        // Invalid PIN check
         return res.status(401).json({ message: "Invalid room pin!" });
         
     } catch (error) {

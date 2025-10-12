@@ -77,7 +77,7 @@ app.get("/", (req, res) => {
     <body>
       ${
         isLoggedIn
-          ? `<h2>Welcome back!</h2><a href="http://localhost:3000">Continue to Homepage</a>`
+          ? `<h2>Welcome back!</h2><a href=${isProduction ? 'https://myrequest-os.vercel.app/': 'http://localhost:3000'}>Continue to Homepage</a>`
           : `<h2>You are logged out</h2><a href="/login">Log In</a>`
       }
     </body>
