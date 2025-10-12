@@ -5,8 +5,6 @@ import CreateRoom from './CreateRoom'
 import add from '@/app/assets/plus.png'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import Login from './Login'
-import Register from './Register'
 import axios from 'axios'
 
 const Navbar = () => {
@@ -30,7 +28,7 @@ const Navbar = () => {
         const checkAuth = async() => {
             try {
                 const API = getApiUrl();
-                const { data } = await axios.get(`${API}/api/user/me`, { withCredentials: true });
+                const { data } = await axios.get(`${API}/api/user/profile`, {withCredentials: true});
                 setUser(data);
             } catch (error) {
                 setUser(null)
@@ -39,14 +37,10 @@ const Navbar = () => {
         checkAuth();
     }, [])
 
-    const handleLogout = async() => {
-        try {
-            const API = getApiUrl();
-            const { data } = await axios.post(`${API}/api/user/logout`, {}, {withCredentials: true});
-            if(data) window.location.reload()
-        } catch (error) {
-            console.log("Unable to logout.")
-        }
+    console.log(user)
+
+    const handleLogout = () => {
+        window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/logout`;   
     }
 
     return (
@@ -99,7 +93,7 @@ const Navbar = () => {
                     {user ? (
                         <>
                             <span className='font-medium text-gray-700'>
-                                {`Logged in as ${user?.username}`}
+                                {`Logged in as ${user?.nickname}`}
                             </span>
                             <button 
                                 onClick={handleLogout} 
