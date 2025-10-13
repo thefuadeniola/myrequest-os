@@ -9,6 +9,15 @@ import { auth } from "express-openid-connect";
 const port = process.env.PORT || 8080
 const isProduction = process.env.NODE_ENV === 'production';
 
+const app = express();
+
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? 'https://myrequest-os.vercel.app' : 'http://localhost:3000',    
+    credentials: true
+}))
+
+connectToDB();
+
 const config = {
   authRequired: false,
   auth0Logout: true,
@@ -19,18 +28,6 @@ const config = {
   clientID: process.env.AUTH0_CLIENT_ID,
   issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
 };
-
-const app = express();
-
-app.use(cors({
-    origin: true,    
-    credentials: true
-}))
-
-
-// auth router attaches /login, /logout, and /callback routes to the baseURL
-
-connectToDB();
 
 app.use(auth(config));
 
