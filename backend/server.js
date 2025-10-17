@@ -4,7 +4,6 @@ import userRoutes from './routes/userRoutes.js'
 import roomRoutes from './routes/roomRoutes.js'
 import cookieParser from "cookie-parser";
 import cors from 'cors'
-import { auth } from "express-openid-connect";
 
 const port = process.env.PORT || 8080
 const isProduction = process.env.NODE_ENV === 'production';
@@ -12,76 +11,18 @@ const isProduction = process.env.NODE_ENV === 'production';
 const app = express();
 
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? 'https://myrequest-os.vercel.app' : 'http://localhost:3000',    
+    origin: isProduction ? 'https://myrequest-os.vercel.app' : 'http://localhost:3000',    
     credentials: true
 }))
 
 connectToDB();
-
-const config = {
-  authRequired: false,
-  auth0Logout: true,
-  secret: process.env.JWT_SECRET,
-  baseURL: isProduction 
-    ? 'https://myrequest-os.onrender.com' 
-    : 'http://localhost:8000',
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-};
-
-app.use(auth(config));
-
-
-app.get("/logout", (req, res) => {
-  res.oidc.logout({ returnTo: `${config.baseURL}/login` });
-});
-
 
 app.use(express.json());
 
 app.use(cookieParser())
 
 app.get("/", (req, res) => {
-  const isLoggedIn = req.oidc.isAuthenticated();
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <title>${isLoggedIn ? "Welcome" : "Logged Out"}</title>
-      <style>
-        body {
-          font-family: sans-serif;
-          background: #f6f6f6;
-          height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-direction: column;
-        }
-        a {
-          padding: 12px 20px;
-          background: #0070f3;
-          color: white;
-          border-radius: 6px;
-          text-decoration: none;
-          font-size: 16px;
-        }
-        a:hover { background: #005dc1; }
-      </style>
-    </head>
-    <body>
-      ${
-        isLoggedIn
-          ? `<h2>Welcome back!</h2><a href=${isProduction ? 'https://myrequest-os.vercel.app/': 'http://localhost:3000'}>Continue to Homepage</a>`
-          : `<h2>You are logged out</h2><a href="/login">Log In</a>`
-      }
-    </body>
-    </html>
-  `;
-
-  res.send(html);
+  res.send("Server up and running")
 });
 
 app.use('/api/user', userRoutes);

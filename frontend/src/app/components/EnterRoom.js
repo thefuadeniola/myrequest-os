@@ -25,7 +25,6 @@ const EnterRoom = ({ showPopup, roomName, roomId }) => {
     );
         if(data) router.push(`/room/${data._id}`)
     } catch (error) {
-    // Better error messages for debugging in the browser
     console.error('Enter room error:', error);
     if (error.response) {
       if (error.response.status === 401) {

@@ -8,15 +8,15 @@ import User from '../models/user.js';
 const router = express.Router();
 
 // --- Room Creation ---
-router.post('/create', protect, async (req, res, next) => {
+router.post('/create', async (req, res, next) => {
     try {
-        const { name, pin, image } = req.body;
+        const { name, pin, image, user } = req.body;
 
         const room = await Room.create({
             name,
             pin,
             image,
-            admin: req.user._id // Use req.user._id directly
+            admin: user
         });
 
         return res.status(201).json(room);
@@ -31,14 +31,13 @@ router.post('/enter', async(req, res, next) => {
     const { id, pin } = req.body;
     
     // Find the room and populate admin for the response
-    const room = await Room.findById(id).populate("admin", "username");
+    const room = await Room.findById(id);
     
     if (!room) {
         return res.status(404).json({ message: "Room not found." });
     }
 
     try {
-        // Use matchPin method, which only runs if 'room' exists.
         if (await room.matchPin(pin)) {
             const roomToken = generateToken({ roomId: room._id });
 
@@ -52,7 +51,7 @@ router.post('/enter', async(req, res, next) => {
             return res.status(200).json({
                 _id: room.id,
                 name: room.name,
-                adminUsername: room.admin.username,
+                adminUsername: room.admin,
             });
         } 
         

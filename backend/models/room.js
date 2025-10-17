@@ -13,10 +13,9 @@ const requestSchema = new Schema({
         type: Number,
         default: 0
     },
-    upvotedBy: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User" 
-    }]
+    upvotedBy: {
+        type: [String],
+    }
 });
 
 const roomSchema = new Schema({
@@ -34,8 +33,7 @@ const roomSchema = new Schema({
         required: true
     },
     admin: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        type: String,
         required: true
     },
     requests: [requestSchema],

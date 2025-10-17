@@ -8,28 +8,23 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 const Navbar = () => {
-    const [popup, showPopup] = useState(false)
-    const showCPopUp = () => showPopup(!popup)
 
-    const [user, setUser] = useState(null);
-    
-    const getApiUrl = () => {
-        const rawApi = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-        return (rawApi && rawApi !== 'undefined' && rawApi !== 'null' ? rawApi : 'http://localhost:8080');
-    }
+    const [authSession, setAuthSession] = useState(null)
+    const [user, setUser] = useState('')
 
-    const handleLogin = () => {
-        window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/login`;
-    }
-
-    useEffect(()=> {
-        const checkAuth = async() => {
+    useEffect(() => {
+        const checkAuth = async () => {
             try {
-                const API = getApiUrl();
-                const { data } = await axios.get(`${API}/api/user/profile`, {withCredentials: true});
-                setUser(data);
+                const response = await axios.get('/api/session-status');
+                if (response.data.session) {
+                    setAuthSession(response.data.session);
+                    setUser(response.data.user);
+                } else {
+                    setAuthSession(false);
+                }
             } catch (error) {
-                setUser(null)
+                console.error("Failed to fetch session:", error);
+                setAuthSession(false);
             }
         }
         checkAuth();
@@ -37,9 +32,8 @@ const Navbar = () => {
 
     console.log(user)
 
-    const handleLogout = () => {
-        window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/logout`;   
-    }
+    const [popup, showPopup] = useState(false)
+    const showCPopUp = () => showPopup(!popup)
 
     return (
         <div className='px-4 py-5 font-sans'>
@@ -50,7 +44,7 @@ const Navbar = () => {
                     </Link>
                 </div>
 
-                {user ? (
+                {authSession ? (
                     <button 
                         onClick={showCPopUp} 
                         className='bg-[#a4161a] hover:bg-[#8e1417] text-white font-semibold px-4 py-2 rounded-full flex items-center space-x-2 shadow-md transition duration-200'
@@ -60,32 +54,31 @@ const Navbar = () => {
                     </button>
                 ) : (
                     <div className='flex items-center'>
-                        <button 
-                            onClick={handleLogin} 
-                            className='border border-[#a4161a] text-[#a4161a] hover:bg-[#a4161a] hover:text-white font-semibold px-4 py-1.5 rounded-lg transition duration-200'
-                        >
-                            Login
-                        </button>
+                        <a href="/auth/login">
+                            <button className='border border-[#a4161a] text-[#a4161a] hover:bg-[#a4161a] hover:text-white font-semibold px-4 py-1.5 rounded-lg transition duration-200'>Log in</button>
+                        </a>
                     </div>
                 )}
             </div>
             
             {popup && (
-                <CreateRoom showPopup={showPopup}/>
+                <CreateRoom showPopup={showPopup} user={user} />
             )}
             <footer className='fixed bottom-0 left-0 right-0 w-full z-40 bg-white border-t border-gray-200 p-4'>
                 <div className='flex items-center justify-center text-sm text-gray-600'>
                     {user ? (
                         <>
                             <span className='font-medium text-gray-700'>
-                                {`Logged in as ${user?.nickname}`}
+                                {`Logged in as ${user}`}
                             </span>
-                            <button 
-                                onClick={handleLogout} 
+                            <a href='/auth/logout'>
+                                <button 
                                 className='ml-2 underline text-[#a4161a] hover:text-[#8e1417] font-semibold'
-                            >
+                                >
                                 Logout
                             </button>
+
+                            </a>
                         </>
                     ) : (
                         'Not logged in. Log in to create a room.'

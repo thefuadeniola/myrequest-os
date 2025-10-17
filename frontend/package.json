@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.10.0",
     "axios": "^1.12.2",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
     "js-cookie": "^3.0.5",
     "next": "15.5.3",
     "next-cloudinary": "^6.16.0",

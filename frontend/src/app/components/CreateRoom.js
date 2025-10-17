@@ -7,7 +7,7 @@ import spinner from '@/app/assets/icons8-spinner.gif'
 import Image from 'next/image'
 
 
-const CreateRoom = ({ showPopup }) => {
+const CreateRoom = ({ showPopup, user }) => {
 
     const [roomName, setRoomName] = useState("")
     const [roomPin, setRoomPin] = useState("")
@@ -42,7 +42,7 @@ const CreateRoom = ({ showPopup }) => {
             const { data } = await axios.post(
                 `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/room/create`, 
                 {
-                    name: roomName, pin: roomPin, image: roomImg
+                    name: roomName, pin: roomPin, image: roomImg, user
                 },
                 { withCredentials: true }
             )
@@ -64,6 +64,11 @@ const CreateRoom = ({ showPopup }) => {
         <div className="fixed top-0 right-0 h-screen w-screen z-10 bg-black/50 flex items-center justify-center" onClick={() => showPopup(false)}>
             <div className="rounded-md bg-white shadow-md h-fit w-4/5 z-100 p-5" onClick={(e) => e.stopPropagation()}>
             <h1 className='text-[#0b090a] font-inter font-bold text-lg'>Create a room</h1>
+            <div className='mb-2'>
+                <label className='text-sm'>Created by</label>
+                <input type="text" value={user} className="border-1 border-[#d3d3d3] mt-1 rounded-md w-full pl-2 py-1" />
+            </div>
+
             <div className='mb-2'>
                 <label className='text-sm'>Room Name</label>
                 <input type="text" value={roomName} onChange={(e) => setRoomName(e.target.value)} className="border-1 border-[#d3d3d3] mt-1 rounded-md w-full pl-2 py-1" />
