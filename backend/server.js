@@ -12,6 +12,8 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const app = express();
 
+connectToDB();
+
 app.use(
   cors({
     origin: isProduction
@@ -20,8 +22,6 @@ app.use(
     credentials: true,
   })
 );
-
-connectToDB();
 
 app.use(express.json());
 
