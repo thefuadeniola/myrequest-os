@@ -42,3 +42,5 @@ next-env.d.ts
 
 # bufferfiles
 /backend/models/buffer!.js
+/backend/middleware/authMiddleware.js
+/backend/middleware/roomMiddleware.js

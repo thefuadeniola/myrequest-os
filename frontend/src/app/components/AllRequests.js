@@ -1,6 +1,8 @@
 import React from 'react'
 
 const AllRequests = ({ requests }) => {
+
+
   return (
     <>
         <style jsx>
@@ -24,8 +26,10 @@ const AllRequests = ({ requests }) => {
                 <div className='bt flex flex-col'>
                     {
                         requests.map((request, index) => (
-                            <div className='bb p-4' key={index}>
+                            <div className='bb p-4 flex flex-row justify-between' key={index}>
                                 <p className='font-inter'><b>{request.song_title}</b>. {`${request.artistes.map(artist => artist.name).join(", ")}`}</p>
+                                <p className='font-inter text-xs'>{request.requestedBy.split('@')[0]}</p>
+
                             </div>
                         ))
                     }

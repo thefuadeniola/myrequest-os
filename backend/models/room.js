@@ -9,6 +9,11 @@ const requestSchema = new Schema({
     artistes: {
         type: Array
     },
+    requestedBy: {
+        type: String,
+        required: true,
+        default: 'guest'
+    },
     upvotes: {
         type: Number,
         default: 0

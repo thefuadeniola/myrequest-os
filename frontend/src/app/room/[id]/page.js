@@ -9,6 +9,22 @@ import { usePathname } from 'next/navigation'
 
 const Request = () => {
 
+    const [user, setUser] = useState('')
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const response = await axios.get('/api/session-status');
+                if (response.data.session) {
+                    setUser(response.data.user);
+                }
+            } catch (error) {
+                console.error("Failed to fetch session:", error);
+            }
+        }
+        checkAuth();
+    }, [])
+
     const pathname = usePathname();
 
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
@@ -59,7 +75,7 @@ const Request = () => {
 
         try {
             const { data } = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/room/add-request`,
-                { title: name, artistes },
+                { title: name, artistes, requestedBy: user },
                 { withCredentials: true }
             )
 
