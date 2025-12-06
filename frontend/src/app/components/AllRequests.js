@@ -28,8 +28,6 @@ const AllRequests = ({ requests }) => {
                         requests.map((request, index) => (
                             <div className='bb p-4 flex flex-row justify-between' key={index}>
                                 <p className='font-inter'><b>{request.song_title}</b>. {`${request.artistes.map(artist => artist.name).join(", ")}`}</p>
-                                <p className='font-inter text-xs'>{request.requestedBy.split('@')[0]}</p>
-
                             </div>
                         ))
                     }
