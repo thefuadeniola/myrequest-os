@@ -14,10 +14,10 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "js-cookie": "^3.0.5",
-    "next": "15.5.3",
+    "next": "^16.0.7",
     "next-cloudinary": "^6.16.0",
     "postcss": "^8.5.6",
-    "react": "19.1.0",
+    "react": "^19.1.2",
     "react-dom": "19.1.0"
   },
   "devDependencies": {
